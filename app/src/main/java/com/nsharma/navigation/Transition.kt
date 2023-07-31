@@ -1,4 +1,4 @@
-package com.nsharma.voice.navigation
+package com.nsharma.navigation
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
@@ -6,29 +6,30 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.Transition
 import androidx.compose.animation.core.updateTransition
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 
-
 @Composable
 fun <S> ContentTransition(
     targetContent: S,
+    enterTransition: EnterTransition,
+    exitTransition: ExitTransition,
     modifier: Modifier = Modifier,
-    contentScope: ContentScope<S>.() -> Unit
+    content: @Composable (S) -> Unit
 ) {
     val transition = updateTransition(targetState = targetContent, label = "ContentTransition")
-    transition.ContentTransition(contentScope, modifier)
+    transition.ContentTransition(enterTransition, exitTransition, content, modifier)
 }
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun <S> Transition<S>.ContentTransition(
-    contentScope: ContentScope<S>.() -> Unit,
+    enterTransition: EnterTransition,
+    exitTransition: ExitTransition,
+    content: @Composable (S) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val visibleContent = remember { mutableStateListOf(currentState) }
@@ -43,26 +44,15 @@ fun <S> Transition<S>.ContentTransition(
     }
 
     visibleContent.forEach { s ->
-        val content = ContentScope(s)
-        content.contentScope()
-
         key(s) {
             AnimatedVisibility(
                 { it == s },
-                enter = content.enter,
-                exit = content.exit,
+                enter = enterTransition,
+                exit = exitTransition,
                 modifier = modifier
-
             ) {
-                content.content(s)
+                content(s)
             }
         }
     }
-}
-
-
-class ContentScope<S> (val s: S) {
-    var enter: EnterTransition = fadeIn()
-    var exit: ExitTransition = fadeOut()
-    lateinit var content: @Composable (S) -> Unit
 }

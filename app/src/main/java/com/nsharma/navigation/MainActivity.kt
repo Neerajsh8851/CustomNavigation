@@ -3,20 +3,29 @@ package com.nsharma.navigation
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.padding
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.with
 import com.nsharma.navigation.ui.screens.ScreenA
 
 class MainActivity : ComponentActivity() {
 
+    @OptIn(ExperimentalAnimationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
-            Navigator(initialScreen = ScreenA)
-
-            Modifier.padding(9.dp)
+            Navigator(
+                initialScreen = ScreenA,
+                transitionResolver = { _, _, isPush ->
+                    if (isPush) {
+                        slideInHorizontally { it } with slideOutHorizontally { -it }
+                    } else {
+                        slideInHorizontally { -it } with slideOutHorizontally { it }
+                    }
+                }
+            )
         }
     }
 }
